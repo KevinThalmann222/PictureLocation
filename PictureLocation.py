@@ -1,26 +1,33 @@
 import PIL.Image
 import PIL.ExifTags
 import gmplot
-from geopy.geocoders import Nominatim
 import webbrowser
+from geopy.geocoders import Nominatim
+from pathlib import Path
 
 
 class PictureLocation:
-    def __init__(self, picture):
+    def __init__(self, picture: str) -> None:
         """_summary_
 
         Args:
-            picture (_type_): _description_
+            picture (str): _description_
         """
-        self.picture = picture
-        img = PIL.Image.open(self.picture)
-        exif = {PIL.ExifTags.TAGS[key]: value for key, value in img._getexif().items() if key in PIL.ExifTags.TAGS}
-        self.coordinations = exif.get("GPSInfo")
-
         self.latitude_coor_dg = None
         self.longitude_coor_dg = None
 
-    def get_coordinaten(self, coor="dg"):
+        self.picture = Path(picture)
+        img = PIL.Image.open(str(self.picture))
+        exif = {PIL.ExifTags.TAGS[key]: value for key, value in img._getexif().items() if key in PIL.ExifTags.TAGS}
+        self.coordinations = exif.get("GPSInfo")
+        self.html_name = self.picture.stem + ".html"
+
+    def __del_html(self) -> None:
+        """_summary_"""
+        html_path = self.picture.parent / self.html_name
+        html_path.unlink()
+
+    def get_coordinaten(self, coor="dg") -> tuple:
         """_summary_
 
         Args:
@@ -53,7 +60,7 @@ class PictureLocation:
         else:
             raise RuntimeError("Please choose dg (Dezimalgrad) or gms (Grad, Minuten, Sekunden)")
 
-    def get_address(self):
+    def get_address(self) -> str:
         """_summary_
 
         Returns:
@@ -63,7 +70,7 @@ class PictureLocation:
             self.latitude_coor_dg, self.longitude_coor_dg = self.get_coordinaten(coor="dg")
         geo_loc = Nominatim(user_agent="GetLoc")
         loc_name = geo_loc.reverse(f"{self.latitude_coor_dg}, {self.longitude_coor_dg}").address
-        print(f"the location of the picture '{self.picture}' is:")
+        print(f"the location of the picture '{self.picture.name}' is:")
         print(f"         --> {loc_name}")
 
         return loc_name
@@ -79,12 +86,24 @@ class PictureLocation:
             self.latitude_coor_dg, self.longitude_coor_dg = self.get_coordinaten(coor="dg")
         gmap = gmplot.gmplot.GoogleMapPlotter(self.latitude_coor_dg, self.longitude_coor_dg, zoom)
         gmap.marker(self.latitude_coor_dg, self.longitude_coor_dg, "cornflowerblue")
-        gmap.draw("location.html")
+        gmap.draw(self.html_name)
         if openbrowser:
-            webbrowser.open("location.html", new=2)
+            webbrowser.open(self.html_name, new=2)
+
+
+def get_pic_path() -> str:
+    """_summary_
+
+    Yields:
+        _type_: _description_
+    """
+    for path in Path(__file__).parent.iterdir():
+        if path.suffix.lower() in [".jpg", ".jpeg", ".gif", ".png", ".tiff", ".raw", ".psd"]:
+            yield path
 
 
 if __name__ == "__main__":
-    pic_loc = PictureLocation("Test1.jpg")
-    # pic_loc.get_address()
-    pic_loc.creat_map()
+    for pic_path in get_pic_path():
+        Picture_location = PictureLocation(pic_path)
+        Picture_location.get_address()
+        Picture_location.creat_map()
