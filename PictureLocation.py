@@ -15,10 +15,22 @@ class PictureLocation:
         """
         self.latitude_coor_dg = None
         self.longitude_coor_dg = None
+        self.init(picture)
 
+    def init(self, picture) -> None:
+        """_summary_
+
+        Args:
+            picture (_type_): _description_
+        """
         self.picture = Path(picture)
         img = PIL.Image.open(str(self.picture))
-        exif = {PIL.ExifTags.TAGS[key]: value for key, value in img._getexif().items() if key in PIL.ExifTags.TAGS}
+        try:
+            exif = {PIL.ExifTags.TAGS[key]: value for key, value in img._getexif().items() if key in PIL.ExifTags.TAGS}
+            self.gps = True
+        except Exception:
+            self.gps = False
+            return
         self.coordinations = exif.get("GPSInfo")
         self.html_name = self.picture.stem + ".html"
 
@@ -27,7 +39,7 @@ class PictureLocation:
         html_path = self.picture.parent / self.html_name
         html_path.unlink()
 
-    def get_coordinaten(self, coor="dg") -> tuple:
+    def get_coordinaten(self, coor=None) -> tuple:
         """_summary_
 
         Args:
@@ -58,7 +70,7 @@ class PictureLocation:
         elif coor == "gms":
             return (latitude_coor_gms, longitude_coor_gms)
         else:
-            raise RuntimeError("Please choose dg (Dezimalgrad) or gms (Grad, Minuten, Sekunden)")
+            return (latitude_directory, self.latitude_coor_dg, longitude_directory, self.longitude_coor_dg), (latitude_coor_gms, longitude_coor_gms)
 
     def get_address(self) -> str:
         """_summary_
