@@ -8,7 +8,7 @@ from PIL import ImageTk, Image
 
 class GUI:
     def __init__(self) -> None:
-        """_summary_"""
+        """conditions"""
         self.padding_x = 0
         self.padding_y = 5
         self.pic_width = 600
@@ -20,7 +20,7 @@ class GUI:
         self.init()
 
     def init(self) -> None:
-        """_summary_"""
+        """run init"""
         #  ----------------- open image -----------------
         image_open = Image.open("icon.png")
         # resize image
@@ -75,26 +75,33 @@ class GUI:
         self.root.mainloop()
 
     def ask_open_file(self) -> None:
-        """_summary_"""
+        """open a browser to choose a picture"""
         self.open_file = True
         file = askopenfile(
             mode="r", filetypes=[("Picture, *.jpg"), ("Picture, *.jpeg"), ("Picture, *.png"), ("Picture, *.gif"), ("All files", "*.*")]
         ).name
         self.button_ask_file.configure(bg="#55de00", text=Path(file).name)
         self.pic_location = PictureLocation(file)
+        # clear all text boxes
+        self.text_coordinaten_long.configure(text="")
+        self.text_coordinaten_grad.configure(text="")
+        self.text_address_part1.configure(text="")
+        self.text_address_part2.configure(text="")
+        self.emty.configure(text="")
+        # No GPS Warning
         if not self.pic_location.gps:
             print("No GPS Infomation")
-            self.button_ask_file.configure(bg="red", text=f"No GPS Infomation from {Path(file).name}")
+            self.button_ask_file.configure(bg="red", text=f"No GPS Infomation of {Path(file).name}")
             return
 
     def pic_coordinaten(self) -> None:
-        """_summary_"""
+        """Print the coordinats of the picture"""
         if not self.open_file:
             print("Please Load the Pic")
             self.button_ask_file.configure(bg="red", text="Please Load the Pic")
             return
         if not self.pic_location.gps:
-            print("Try a other Pic")
+            self.emty.configure(text="Try a other Pic")
             self.button_ask_file.configure(bg="red")
             return
         dg, grad = self.pic_location.get_coordinaten()
@@ -108,9 +115,9 @@ class GUI:
         )
 
     def pic_address(self) -> None:
-        """_summary_"""
+        """Print the address of the picture"""
         if not self.open_file:
-            print("Please Load the Pic")
+            self.emty.configure(text="Try a other Pic")
             self.button_ask_file.configure(bg="red", text="Please Load the Pic")
             return
         if not self.pic_location.gps:
@@ -129,9 +136,9 @@ class GUI:
             self.text_address_part1.configure(text=address)
 
     def get_map(self) -> None:
-        """_summary_"""
+        """open a internet browser and show the location on google maps"""
         if not self.open_file:
-            print("Please Load the Pic")
+            self.emty.configure(text="Try a other Pic")
             self.button_ask_file.configure(bg="red", text="Please Load the Pic")
             return
         if not self.pic_location.gps:
